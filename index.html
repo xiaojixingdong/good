@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎁 超级补贴抽奖</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ff4d4f 0%, #ff7875 25%, #ff9c6e 55%, #ffd591 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header {
+  text-align: center;
+  padding-top: 16px;
+  position: relative;
+  z-index: 2;
+}
+.header h1 {
+  font-size: 26px;
+  color: #fff;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.35);
+  letter-spacing: 3px;
+}
+.header .subtitle {
+  font-size: 13px;
+  color: #ffe7ba;
+  margin-top: 4px;
+}
+
+/* 跑马灯 */
+.marquee-wrap {
+  position: relative;
+  z-index: 2;
+  margin: 10px 16px 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 7px 14px;
+  overflow: hidden;
+}
+.marquee {
+  white-space: nowrap;
+  animation: marqueeScroll 14s linear infinite;
+  color: #fff;
+  font-size: 12px;
+}
+@keyframes marqueeScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* 抽奖区域 */
+.lottery-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 12px;
+}
+.lottery-box {
+  width: 340px;
+  height: 340px;
+  background: linear-gradient(145deg, #fff2e8, #fff7e6);
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 8px 32px rgba(255, 77, 79, 0.35), inset 0 2px 8px rgba(255,255,255,0.8);
+  position: relative;
+}
+.lottery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+}
+.grid-item {
+  background: linear-gradient(145deg, #fff, #fff2e8);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #cf1322;
+  border: 2px solid #ffd591;
+  transition: all 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+.grid-item .icon {
+  font-size: 26px;
+  margin-bottom: 3px;
+  transition: transform 0.2s;
+}
+.grid-item .label {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+}
+.grid-item.active {
+  background: linear-gradient(145deg, #ff4d4f, #ff7875);
+  border-color: #ffccc7;
+  color: #fff;
+  box-shadow: 0 0 24px rgba(255, 77, 79, 0.7), inset 0 0 20px rgba(255,255,255,0.3);
+  transform: scale(1.06);
+  z-index: 3;
+}
+.grid-item.active .icon {
+  transform: scale(1.2);
+  filter: brightness(1.5);
+  animation: iconShake 0.3s ease infinite;
+}
+@keyframes iconShake {
+  0%, 100% { transform: scale(1.2) rotate(-3deg); }
+  50% { transform: scale(1.2) rotate(3deg); }
+}
+.grid-item.near-miss {
+  background: linear-gradient(145deg, #ff9c6e, #ffd591);
+  border-color: #ff4d4f;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 156, 110, 0.6);
+  animation: nearMissPulse 0.4s ease infinite alternate;
+}
+@keyframes nearMissPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
+}
+.grid-item.almost-stop {
+  background: linear-gradient(145deg, #ff4d4f, #ff7875);
+  border-color: #fff566;
+  color: #fff;
+  box-shadow: 0 0 30px rgba(255, 85, 0, 0.9), inset 0 0 25px rgba(255,255,255,0.4);
+  transform: scale(1.08);
+  z-index: 4;
+}
+
+/* 中间按钮 */
+.center-btn {
+  grid-column: 2;
+  grid-row: 2;
+  background: linear-gradient(145deg, #ff4d4f, #cf1322) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer;
+  font-size: 17px !important;
+  font-weight: bold;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.55), inset 0 2px 8px rgba(255,255,255,0.3) !important;
+  animation: btnPulse 1.5s ease-in-out infinite;
+}
+.center-btn:active { transform: scale(0.94); }
+.center-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(255, 77, 79, 0.55), inset 0 2px 8px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 6px 28px rgba(255, 77, 79, 0.8), inset 0 2px 8px rgba(255,255,255,0.5); }
+}
+
+/* 底部 */
+.footer-info {
+  text-align: center;
+  margin-top: 12px;
+  color: #fff;
+  font-size: 12px;
+  opacity: 0.9;
+  position: relative;
+  z-index: 2;
+}
+.footer-info .highlight {
+  color: #fff566;
+  font-weight: bold;
+}
+
+/* 弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+.modal-overlay.show { display: flex; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-content {
+  background: linear-gradient(180deg, #fff 0%, #fff2e8 100%);
+  border-radius: 24px;
+  padding: 32px 24px;
+  text-align: center;
+  width: 300px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+@keyframes modalPop {
+  from { transform: scale(0.4) translateY(60px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-content .close-btn {
+  position: absolute;
+  top: 10px; right: 14px;
+  font-size: 26px;
+  color: #bbb;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-content .result-icon {
+  font-size: 60px;
+  margin-bottom: 10px;
+  animation: iconBounce 0.6s ease;
+}
+@keyframes iconBounce {
+  0% { transform: scale(0) rotate(-20deg); }
+  60% { transform: scale(1.3) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.modal-content .result-title {
+  font-size: 22px;
+  color: #cf1322;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.modal-content .result-desc {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 16px;
+}
+.modal-content .result-amount {
+  font-size: 40px;
+  color: #ff4d4f;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 4px rgba(255,77,79,0.3);
+}
+.modal-content .modal-btn {
+  background: linear-gradient(145deg, #ff4d4f, #cf1322);
+  color: #fff;
+  border: none;
+  padding: 12px 44px;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 77, 79, 0.45);
+}
+.modal-content .modal-btn:active { transform: scale(0.94); }
+
+/* 背景金币 */
+.bg-coins {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-coin {
+  position: absolute;
+  font-size: 20px;
+  opacity: 0.12;
+  animation: floatCoin 10s linear infinite;
+}
+@keyframes floatCoin {
+  0% { transform: translateY(105vh) rotate(0deg); }
+  100% { transform: translateY(-10vh) rotate(360deg); }
+}
+
+@media (max-width: 380px) {
+  .lottery-box { width: 300px; height: 300px; }
+  .grid-item .icon { font-size: 22px; }
+  .grid-item .label { font-size: 10px; }
+  .header h1 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-coins" id="bgCoins"></div>
+
+<div class="header">
+  <h1>🎁 超级补贴抽奖</h1>
+  <p class="subtitle">百万补贴 等你来拿</p>
+</div>
+
+<div class="marquee-wrap">
+  <div class="marquee">🎉 恭喜用户 138****8888 抽中 2026元大奖！&nbsp;&nbsp;&nbsp;&nbsp;🎉 恭喜用户 159****6666 抽中 苹果笔记本！&nbsp;&nbsp;&nbsp;&nbsp;🎉 恭喜用户 186****9999 抽中 100元红包！&nbsp;&nbsp;&nbsp;&nbsp;</div>
+</div>
+
+<div class="lottery-wrap">
+  <div class="lottery-box">
+    <div class="lottery-grid" id="lotteryGrid"></div>
+  </div>
+</div>
+
+<div class="footer-info">
+  <p>今日剩余抽奖次数：<span class="highlight" id="remainCount">3</span> 次</p>
+  <p style="margin-top:4px; font-size:10px; opacity:0.6;">活动最终解释权归主办方所有</p>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-content">
+    <div class="close-btn" onclick="closeModal()">&times;</div>
+    <div class="result-icon" id="resultIcon">🧧</div>
+    <div class="result-title" id="resultTitle">恭喜中奖！</div>
+    <div class="result-desc" id="resultDesc">运气爆棚！您抽中了</div>
+    <div class="result-amount" id="resultAmount">5元</div>
+    <button class="modal-btn" onclick="closeModal()">开心收下</button>
+  </div>
+</div>
+
+<script>
+// ========== 配置 ==========
+const prizes = [
+  { id: 0, name: '2026元', icon: '💰', type: 'money', isBig: true },
+  { id: 1, name: '100元', icon: '💵', type: 'money', isBig: false },
+  { id: 2, name: '50元', icon: '💵', type: 'money', isBig: false },
+  { id: 7, name: '苹果笔记本', icon: '💻', type: 'gift', isBig: true },
+  { id: 8, name: '5元', icon: '🧧', type: 'money', isBig: false },      // 必中
+  { id: 3, name: '苹果手机', icon: '📱', type: 'gift', isBig: true },
+  { id: 6, name: '20元', icon: '💵', type: 'money', isBig: false },
+  { id: 5, name: '10元', icon: '💵', type: 'money', isBig: false },
+  { id: 4, name: '谢谢参与', icon: '😅', type: 'none', isBig: false },
+];
+
+// 九宫格顺时针路径
+const path = [0, 1, 2, 5, 8, 7, 6, 3];
+// 5元在 path 中的索引
+const targetPathIndex = path.indexOf(8);
+// 大奖格子（制造悬念用）
+const bigPrizeIds = [0, 3, 7]; // 2026元, 苹果手机, 苹果笔记本
+
+let isRolling = false;
+let remainCount = 3;
+
+// ========== 初始化 ==========
+function initBgCoins() {
+  const container = document.getElementById('bgCoins');
+  for (let i = 0; i < 12; i++) {
+    const coin = document.createElement('div');
+    coin.className = 'bg-coin';
+    coin.textContent = ['💰', '💵', '🧧', '💎'][Math.floor(Math.random() * 4)];
+    coin.style.left = Math.random() * 100 + '%';
+    coin.style.animationDuration = (8 + Math.random() * 8) + 's';
+    coin.style.animationDelay = Math.random() * 6 + 's';
+    coin.style.fontSize = (14 + Math.random() * 18) + 'px';
+    container.appendChild(coin);
+  }
+}
+
+function initGrid() {
+  const grid = document.getElementById('lotteryGrid');
+  const order = [0, 1, 2, 7, 8, 3, 6, 5, 4];
+  order.forEach((prizeIdx, gridIdx) => {
+    const prize = prizes[prizeIdx];
+    const div = document.createElement('div');
+    div.className = 'grid-item';
+    div.id = 'item-' + prize.id;
+    if (gridIdx === 4) {
+      div.className += ' center-btn';
+      div.innerHTML = '<span style="font-size:15px;">立即<br>抽奖</span>';
+      div.onclick = startDraw;
+    } else {
+      div.innerHTML = `<div class="icon">${prize.icon}</div><div class="label">${prize.name}</div>`;
+    }
+    grid.appendChild(div);
+  });
+}
+
+function clearAllHighlight() {
+  document.querySelectorAll('.grid-item').forEach(el => {
+    if (!el.classList.contains('center-btn')) {
+      el.classList.remove('active', 'near-miss', 'almost-stop');
+    }
+  });
+}
+
+function highlightItem(prizeId, className) {
+  const el = document.getElementById('item-' + prizeId);
+  if (el) el.classList.add(className);
+}
+
+// ========== 核心：拼多多式悬念抽奖 ==========
+function startDraw() {
+  if (isRolling) return;
+  if (remainCount <= 0) {
+    showModal('😅', '抽奖次数用完', '今日抽奖次数已用完，明天再来吧！', '');
+    return;
+  }
+  isRolling = true;
+  remainCount--;
+  document.getElementById('remainCount').textContent = remainCount;
+  document.querySelector('.center-btn').disabled = true;
+
+  // 总转动步数 = 多圈 + 最终停在5元
+  const baseRounds = 4; // 基础圈数
+  const totalSteps = baseRounds * path.length + targetPathIndex;
+
+  let step = 0;
+  let currentPathIdx = 0;
+
+  // 速度配置（毫秒）—— 拼多多式：快 -> 匀速 -> 大减速 -> 几乎停 -> 再动 -> 超慢停
+  const speedSchedule = generateSpeedSchedule(totalSteps);
+
+  function roll() {
+    clearAllHighlight();
+
+    currentPathIdx = step % path.length;
+    const prizeId = path[currentPathIdx];
+    const el = document.getElementById('item-' + prizeId);
+
+    // 判断当前阶段
+    const progress = step / totalSteps;
+
+    if (progress > 0.88 && progress < 0.96) {
+      // 最后阶段：在大奖附近徘徊，制造"要中了"的错觉
+      if (bigPrizeIds.includes(prizeId)) {
+        highlightItem(prizeId, 'almost-stop');
+      } else {
+        highlightItem(prizeId, 'active');
+      }
+    } else if (progress > 0.75 && progress <= 0.88) {
+      // 减速阶段：大奖附近闪烁
+      if (bigPrizeIds.includes(prizeId)) {
+        highlightItem(prizeId, 'near-miss');
+      } else {
+        highlightItem(prizeId, 'active');
+      }
+    } else {
+      highlightItem(prizeId, 'active');
+    }
+
+    step++;
+
+    if (step > totalSteps) {
+      setTimeout(() => finishDraw(), 400);
+      return;
+    }
+
+    const delay = speedSchedule[step - 1] || speedSchedule[speedSchedule.length - 1];
+    setTimeout(roll, delay);
+  }
+
+  roll();
+}
+
+// 生成速度表：先飞快，然后匀速，然后大幅减速，最后几乎静止再慢慢滑
+function generateSpeedSchedule(totalSteps) {
+  const schedule = [];
+  const fastEnd = Math.floor(totalSteps * 0.25);      // 0-25% 飞快
+  const cruiseEnd = Math.floor(totalSteps * 0.55);    // 25-55% 匀速
+  const slowEnd = Math.floor(totalSteps * 0.82);      // 55-82% 减速
+  const suspenseEnd = Math.floor(totalSteps * 0.94);  // 82-94% 悬念：几乎停
+  const finalEnd = totalSteps;                         // 94-100% 超慢滑到终点
+
+  for (let i = 0; i < totalSteps; i++) {
+    if (i < fastEnd) {
+      // 飞快起步：60ms -> 40ms
+      schedule.push(Math.max(40, 80 - i * 0.5));
+    } else if (i < cruiseEnd) {
+      // 匀速高速：40ms
+      schedule.push(40);
+    } else if (i < slowEnd) {
+      // 大幅减速：40ms -> 300ms
+      const ratio = (i - cruiseEnd) / (slowEnd - cruiseEnd);
+      schedule.push(40 + ratio * 260);
+    } else if (i < suspenseEnd) {
+      // 悬念阶段：在大奖附近几乎停住
+      const ratio = (i - slowEnd) / (suspenseEnd - slowEnd);
+      // 300ms -> 800ms，越来越慢
+      schedule.push(300 + ratio * 500);
+    } else {
+      // 最后滑到5元：超慢
+      const ratio = (i - suspenseEnd) / (finalEnd - suspenseEnd);
+      // 800ms -> 1200ms
+      schedule.push(800 + ratio * 400);
+    }
+  }
+  return schedule;
+}
+
+function finishDraw() {
+  isRolling = false;
+  document.querySelector('.center-btn').disabled = false;
+
+  clearAllHighlight();
+  const targetEl = document.getElementById('item-8');
+  if (targetEl) targetEl.classList.add('active');
+
+  shootCoins();
+
+  setTimeout(() => {
+    showModal('🧧', '恭喜中奖！', '运气爆棚！您抽中了', '5元');
+  }, 800);
+}
+
+// ========== 金币雨 ==========
+function shootCoins() {
+  const colors = ['#FFD700', '#FFA500', '#FF6347', '#FF4500', '#FFD591', '#FFF566'];
+  confetti({ particleCount: 50, spread: 55, origin: { x: 0.15, y: 0.55 }, colors, shapes: ['circle'], scalar: 1.6, gravity: 0.7, ticks: 160, startVelocity: 40 });
+  confetti({ particleCount: 50, spread: 55, origin: { x: 0.85, y: 0.55 }, colors, shapes: ['circle'], scalar: 1.6, gravity: 0.7, ticks: 160, startVelocity: 40 });
+  setTimeout(() => {
+    confetti({ particleCount: 35, spread: 130, origin: { x: 0.5, y: 0.48 }, colors, shapes: ['circle', 'square'], scalar: 2.2, gravity: 0.5, ticks: 220 });
+  }, 300);
+}
+
+// ========== 弹窗 ==========
+function showModal(icon, title, desc, amount) {
+  document.getElementById('resultIcon').textContent = icon;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultDesc').textContent = desc;
+  document.getElementById('resultAmount').textContent = amount;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  clearAllHighlight();
+}
+
+// ========== 启动 ==========
+initBgCoins();
+initGrid();
+</script>
+</body>
+</html>
