@@ -1,748 +1,1086 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>心灵契合度测试</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  min-height: 100vh;
-  color: #e0e0e0;
-  overflow-x: hidden;
-}
-
-/* 兑换码弹窗 */
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.85);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-}
-.modal-box {
-  background: linear-gradient(145deg, #1e1e3f, #2a2a5a);
-  border-radius: 20px;
-  padding: 50px 40px;
-  text-align: center;
-  max-width: 420px;
-  width: 90%;
-  border: 1px solid rgba(255,107,107,0.3);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255,107,107,0.1);
-  animation: modalIn 0.6s ease;
-}
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(-30px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.modal-box h2 {
-  font-size: 26px; margin-bottom: 10px;
-  background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.modal-box p { color: #aaa; margin-bottom: 25px; font-size: 14px; }
-.modal-box input {
-  width: 100%; padding: 14px 18px;
-  border: 2px solid rgba(255,107,107,0.3);
-  border-radius: 12px; background: rgba(0,0,0,0.3);
-  color: #fff; font-size: 16px; text-align: center;
-  outline: none; transition: all 0.3s;
-}
-.modal-box input:focus {
-  border-color: #ff6b6b;
-  box-shadow: 0 0 15px rgba(255,107,107,0.3);
-}
-.modal-box input::placeholder { color: #666; }
-.modal-box button {
-  margin-top: 20px; width: 100%; padding: 14px;
-  border: none; border-radius: 12px;
-  background: linear-gradient(90deg, #ff6b6b, #ee5a5a);
-  color: #fff; font-size: 16px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-}
-.modal-box button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255,107,107,0.4);
-}
-.modal-box .error {
-  color: #ff6b6b; font-size: 13px; margin-top: 10px;
-  opacity: 0; transition: opacity 0.3s;
-}
-.modal-box .error.show { opacity: 1; }
-
-/* 主容器 */
-.container {
-  max-width: 720px; margin: 0 auto;
-  padding: 30px 20px; display: none;
-}
-.container.show { display: block; animation: fadeIn 0.8s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* 头部 */
-.header {
-  text-align: center; margin-bottom: 35px;
-}
-.header h1 {
-  font-size: 28px;
-  background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
-}
-.header p { color: #888; font-size: 14px; }
-
-/* 进度条 */
-.progress-wrap {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(26,26,46,0.95);
-  padding: 15px 0; margin-bottom: 25px;
-  backdrop-filter: blur(10px);
-}
-.progress-bar {
-  height: 6px; background: rgba(255,255,255,0.1);
-  border-radius: 3px; overflow: hidden;
-}
-.progress-fill {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, #ff6b6b, #ffd93d);
-  border-radius: 3px; transition: width 0.5s ease;
-}
-.progress-text {
-  text-align: center; margin-top: 8px;
-  font-size: 13px; color: #888;
-}
-
-/* 模块标题 */
-.module-title {
-  font-size: 18px; color: #ffd93d;
-  margin: 30px 0 20px; padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,217,61,0.2);
-  display: flex; align-items: center; gap: 10px;
-}
-.module-title .num {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-  color: #fff; width: 32px; height: 32px;
-  border-radius: 50%; display: flex;
-  align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700;
-}
-
-/* 题目卡片 */
-.question-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-  border-radius: 16px; padding: 22px 24px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: all 0.3s;
-}
-.question-card:hover {
-  border-color: rgba(255,107,107,0.2);
-  transform: translateX(4px);
-}
-.question-card.answered {
-  border-color: rgba(107,203,119,0.3);
-}
-.question-num {
-  display: inline-block;
-  background: rgba(255,107,107,0.15);
-  color: #ff6b6b; font-size: 12px;
-  padding: 3px 10px; border-radius: 20px;
-  margin-bottom: 10px;
-}
-.question-text {
-  font-size: 15px; line-height: 1.7;
-  color: #e8e8e8; margin-bottom: 16px;
-}
-.question-text .urgent {
-  color: #ff6b6b; font-weight: 600;
-}
-.options {
-  display: flex; flex-direction: column; gap: 10px;
-}
-.option {
-  padding: 12px 16px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px; cursor: pointer;
-  transition: all 0.25s; font-size: 14px;
-  display: flex; align-items: center; gap: 10px;
-}
-.option:hover {
-  background: rgba(255,107,107,0.1);
-  border-color: rgba(255,107,107,0.3);
-}
-.option.selected {
-  background: linear-gradient(90deg, rgba(255,107,107,0.2), rgba(255,107,107,0.1));
-  border-color: #ff6b6b;
-  color: #ff8e8e;
-}
-.option-letter {
-  width: 26px; height: 26px;
-  border-radius: 50%; background: rgba(255,255,255,0.1);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
-}
-.option.selected .option-letter {
-  background: #ff6b6b; color: #fff;
-}
-
-/* 提交按钮 */
-.submit-btn {
-  width: 100%; padding: 16px;
-  margin-top: 30px; margin-bottom: 50px;
-  border: none; border-radius: 14px;
-  background: linear-gradient(90deg, #ff6b6b, #ee5a5a);
-  color: #fff; font-size: 17px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-  display: none;
-}
-.submit-btn.show { display: block; }
-.submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(255,107,107,0.4);
-}
-.submit-btn:disabled {
-  opacity: 0.5; cursor: not-allowed; transform: none;
-}
-
-/* 结果页 */
-.result-page {
-  display: none; text-align: center;
-  padding: 40px 20px; max-width: 600px;
-  margin: 0 auto;
-}
-.result-page.show { display: block; animation: fadeIn 1s ease; }
-.result-emoji { font-size: 60px; margin-bottom: 15px; }
-.result-title {
-  font-size: 24px;
-  background: linear-gradient(90deg, #ff6b6b, #ffd93d);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  margin-bottom: 10px;
-}
-.result-subtitle { color: #888; font-size: 14px; margin-bottom: 30px; }
-
-/* 甜言蜜语 */
-.love-letter {
-  background: linear-gradient(145deg, rgba(255,107,107,0.08), rgba(255,217,61,0.05));
-  border-radius: 20px; padding: 30px;
-  border: 1px solid rgba(255,107,107,0.15);
-  margin-bottom: 30px; text-align: left;
-  position: relative; overflow: hidden;
-}
-.love-letter::before {
-  content: "❝"; position: absolute; top: 10px; left: 15px;
-  font-size: 40px; color: rgba(255,107,107,0.15);
-  font-family: Georgia, serif;
-}
-.love-letter p {
-  font-size: 15px; line-height: 2;
-  color: #e0c0c0; position: relative; z-index: 1;
-  text-indent: 2em;
-}
-.love-letter .signature {
-  text-align: right; margin-top: 15px;
-  color: #ff8e8e; font-style: italic;
-}
-
-/* 卡密区域 */
-.code-box {
-  background: linear-gradient(145deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2));
-  border-radius: 16px; padding: 25px;
-  border: 1px solid rgba(255,217,61,0.2);
-  margin-bottom: 20px;
-}
-.code-box h3 {
-  color: #ffd93d; font-size: 16px; margin-bottom: 15px;
-}
-.code-display {
-  background: rgba(0,0,0,0.5);
-  border-radius: 10px; padding: 15px;
-  font-family: "Courier New", monospace;
-  font-size: 13px; color: #6bcb77;
-  word-break: break-all; margin-bottom: 15px;
-  border: 1px solid rgba(107,203,119,0.2);
-  letter-spacing: 1px;
-}
-.copy-btn {
-  padding: 12px 30px;
-  border: none; border-radius: 10px;
-  background: linear-gradient(90deg, #6bcb77, #4ecdc4);
-  color: #fff; font-size: 15px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-}
-.copy-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(107,203,119,0.4);
-}
-.copy-btn.copied {
-  background: linear-gradient(90deg, #4ecdc4, #44a08d);
-}
-
-/* 提示 */
-.tip {
-  color: #888; font-size: 13px; margin-top: 15px;
-  line-height: 1.8;
-}
-.tip strong { color: #ff8e8e; }
-
-/* 解密区域（隐藏，你自己用） */
-.decode-section {
-  display: none;
-  margin-top: 40px; padding: 25px;
-  background: rgba(0,0,0,0.3);
-  border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
-}
-.decode-section h3 { color: #ffd93d; margin-bottom: 15px; }
-.decode-section textarea {
-  width: 100%; padding: 12px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px; color: #fff;
-  font-family: monospace; font-size: 13px;
-  resize: vertical; min-height: 80px;
-}
-.decode-section button {
-  margin-top: 10px; padding: 10px 25px;
-  border: none; border-radius: 8px;
-  background: #ff6b6b; color: #fff;
-  cursor: pointer;
-}
-.decode-output {
-  margin-top: 15px; padding: 15px;
-  background: rgba(0,0,0,0.4);
-  border-radius: 10px; font-size: 13px;
-  max-height: 400px; overflow-y: auto;
-}
-.decode-output .ans-row {
-  display: flex; justify-content: space-between;
-  padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.decode-output .ans-row.inconsistent {
-  color: #ff6b6b; background: rgba(255,107,107,0.1);
-  border-radius: 4px; padding: 4px 8px;
-}
-
-/* 滚动条 */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,107,107,0.3); border-radius: 3px; }
-
-/* 星星背景 */
-.stars {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: -1;
-}
-.star {
-  position: absolute; background: #fff;
-  border-radius: 50%; animation: twinkle 3s infinite;
-}
-@keyframes twinkle {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.8; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>旁白的生日祝福</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            touch-action: none;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        #loading {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd700;
+            font-size: 20px;
+            z-index: 100;
+            transition: opacity 1s;
+        }
+        #letter-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            cursor: pointer;
+            padding: 20px;
+        }
+        #letter-overlay.active { display: flex; }
+        .letter-paper {
+            width: 90vw;
+            max-width: 500px;
+            background: linear-gradient(135deg, #fffef5 0%, #fff8e7 100%);
+            border-radius: 8px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .letter-paper.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .letter-text {
+            color: #333;
+            font-size: 17px;
+            line-height: 2;
+            text-align: center;
+        }
+        .letter-text .line {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+        .letter-text .line.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .letter-close {
+            position: absolute;
+            top: 12px; right: 18px;
+            color: #999;
+            font-size: 28px;
+            cursor: pointer;
+        }
+        #hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,215,0,0.7);
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 0.5s;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #progress {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 12px;
+        }
+        .progress-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,215,0,0.4);
+            background: transparent;
+            transition: all 0.5s;
+        }
+        .progress-dot.opened {
+            background: #ffd700;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px #ffd700;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
-<!-- 星星背景 -->
-<div class="stars" id="stars"></div>
-
-<!-- 兑换码弹窗 -->
-<div class="modal-overlay" id="modal">
-  <div class="modal-box">
-    <h2>🔐 心灵契合度测试</h2>
-    <p>请输入兑换码方可进入测试</p>
-    <input type="text" id="codeInput" placeholder="输入兑换码..." autocomplete="off">
-    <button onclick="checkCode()">进入测试</button>
-    <div class="error" id="codeError">兑换码错误，请重新输入</div>
-  </div>
-</div>
-
-<!-- 主容器 -->
-<div class="container" id="mainContainer">
-  <div class="header">
-    <h1>✨ 心灵契合度测试</h1>
-    <p>共120题，请根据你的第一直觉作答，不要过度思考</p>
-  </div>
-
-  <div class="progress-wrap">
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
+    <div id="loading">正在准备生日惊喜...</div>
+    <div id="canvas-container"></div>
+    <div id="progress">
+        <div class="progress-dot" id="dot-0"></div>
+        <div class="progress-dot" id="dot-1"></div>
+        <div class="progress-dot" id="dot-2"></div>
     </div>
-    <div class="progress-text" id="progressText">已完成 0 / 120 题</div>
-  </div>
+    <div id="hint">拖拽旋转视角 · 点击信封阅读</div>
 
-  <div id="questionsArea"></div>
-
-  <button class="submit-btn" id="submitBtn" onclick="submitTest()">提交测试，生成专属密钥</button>
-</div>
-
-<!-- 结果页 -->
-<div class="result-page" id="resultPage">
-  <div class="result-emoji">🎉</div>
-  <div class="result-title">测试完成！</div>
-  <div class="result-subtitle">感谢你真诚的回答，这是属于你的专属密钥</div>
-
-  <div class="love-letter">
-    <p>
-      你知道吗？在这个世界上，有七十多亿人，而你们能在同一所学校、同一个年级相遇，这本身就是宇宙级别的奇迹。
-    </p>
-    <p>
-      你认真回答每一道题的样子，一定特别可爱。不管结果如何，愿意花时间来了解自己的人，都值得被温柔以待。
-    </p>
-    <p>
-      也许现在的你们还有差距，但真正的喜欢从来不是因为谁更优秀，而是因为——在看见对方的那一刻，心跳漏了半拍。
-    </p>
-    <p>
-      排名会变化，成绩会波动，但真诚的心永远不会贬值。愿你勇敢，也愿你被勇敢对待。
-    </p>
-    <div class="signature">—— 一个相信爱情的人 💌</div>
-  </div>
-
-  <div class="code-box">
-    <h3>🔑 你的专属密钥（请复制发给对方）</h3>
-    <div class="code-display" id="codeDisplay"></div>
-    <button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 一键复制密钥</button>
-  </div>
-
-  <div class="tip">
-    <strong>💡 提示：</strong>将上方密钥复制后发送即可。<br>
-    密钥是你的答案数字串（0=A, 1=B, 2=C, 3=D），对方收到后即可查看结果。
-  </div>
-
-  <!-- 解密区域（你自己用，把 show 改成 block 即可看到） -->
-  <div class="decode-section" id="decodeSection" style="display:none;">
-    <h3>🔓 解密工具（仅管理员可见）</h3>
-    <textarea id="decodeInput" placeholder="粘贴密钥..."></textarea>
-    <button onclick="decodeAnswers()">解密</button>
-    <div class="decode-output" id="decodeOutput"></div>
-  </div>
-</div>
+    <div id="letter-overlay">
+        <div class="letter-paper" id="letter-paper">
+            <div class="letter-close">&times;</div>
+            <div class="letter-text" id="letter-text"></div>
+        </div>
+    </div>
 
 <script>
-// ========== 题目数据 ==========
-const questions = [
-  // ===== 模块A：日常相处与细节观察（30题）=====
-  {mod:"A", q:"你们班上周数学测验，你注意到他/她考了多少分吗？", opts:["A. 记得很清楚","B. 大概知道范围","C. 完全没注意","D. 不关心分数"]},
-  {mod:"A", q:"他/她平时喝水喜欢用什么杯子？", opts:["A. 保温杯","B. 塑料杯/一次性杯","C. 玻璃杯","D. 没注意过"]},
-  {mod:"A", q:"他/她走路时习惯走在你左边还是右边？", opts:["A. 左边","B. 右边","C. 不固定","D. 没注意过"]},
-  {mod:"A", q:"他/她书包/笔袋上有什么挂件或贴纸？", opts:["A. 有，我记得是什么","B. 有，但记不清了","C. 没有","D. 没注意过"]},
-  {mod:"A", q:"他/她最近一次换发型是什么时候？", opts:["A. 最近一两周","B. 一个月左右","C. 很久了","D. 没注意过"]},
-  {mod:"A", q:"你们聊天时，他/她最常用的表情包风格是？", opts:["A. 可爱萌系","B. 搞笑沙雕","C. 文字表情","D. 不怎么用表情"]},
-  {mod:"A", q:"他/她课间最常去的地方是？", opts:["A. 走廊/阳台透气","B. 找朋友聊天","C. 趴在桌上休息","D. 去小卖部"]},
-  {mod:"A", q:"他/她写字用左手还是右手？", opts:["A. 左手","B. 右手","C. 左右都会","D. 没注意过"]},
-  {mod:"A", q:"他/她午餐一般是自己带还是买？", opts:["A. 自己带","B. 学校买","C. 有时候带有时候买","D. 不知道"]},
-  {mod:"A", q:"他/她校服外套拉链平时是拉上还是敞开的？", opts:["A. 拉上","B. 敞开","C. 看天气","D. 没注意过"]},
-  {mod:"A", q:"他/她心情不好的时候，最明显的表现是什么？", opts:["A. 不说话/沉默","B. 找朋友倾诉","C. 装作没事","D. 没注意过"]},
-  {mod:"A", q:"他/她笑的时候，眼睛会不会弯起来？", opts:["A. 会，很明显","B. 有时候","C. 不会","D. 没注意过"]},
-  {mod:"A", q:"他/她紧张的时候有什么小动作？", opts:["A. 咬嘴唇/咬笔","B. 抖腿","C. 搓手","D. 没注意过"]},
-  {mod:"A", q:"他/她上课被老师点名回答问题时，第一反应是？", opts:["A. 有点慌但站起来","B. 很淡定","C. 低头希望别被看到","D. 没注意过"]},
-  {mod:"A", q:"他/她收到好消息时，第一个动作通常是？", opts:["A. 笑","B. 告诉旁边的人","C. 自己偷偷开心","D. 没注意过"]},
-  {mod:"A", q:"他/她最喜欢的科目是？", opts:["A. 语文/英语","B. 数学/理科","C. 体育/音乐/美术","D. 不知道"]},
-  {mod:"A", q:"他/她周末一般怎么安排？", opts:["A. 在家休息/学习","B. 出去玩","C. 补课","D. 不知道"]},
-  {mod:"A", q:"他/她听歌喜欢戴耳机还是外放？", opts:["A. 戴耳机","B. 外放","C. 不听歌","D. 不知道"]},
-  {mod:"A", q:"他/她吃东西有没有忌口？", opts:["A. 有，我知道","B. 有，但记不清","C. 没有","D. 不知道"]},
-  {mod:"A", q:"他/她手机壳是什么颜色/图案？", opts:["A. 纯色","B. 卡通/动漫","C. 透明/没壳","D. 没注意过"]},
-  {mod:"A", q:"他/她在班里最好的朋友是男的女的？", opts:["A. 女生","B. 男生","C. 男女都有","D. 不知道"]},
-  {mod:"A", q:"他/她参加班级活动积极吗？", opts:["A. 很积极","B. 一般","C. 不太参加","D. 不知道"]},
-  {mod:"A", q:"他/她遇到不公平的事会怎么做？", opts:["A. 直接说出来","B. 心里不舒服但不说","C. 无所谓","D. 不知道"]},
-  {mod:"A", q:"他/她借别人东西会主动还吗？", opts:["A. 会，很准时","B. 会，但会忘","C. 不太主动","D. 不知道"]},
-  {mod:"A", q:"他/她排队时会插队或者让别人插队吗？", opts:["A. 不会，很守规矩","B. 偶尔","C. 会","D. 不知道"]},
-  // 矛盾检测题（与前面重复但换表述）
-  {mod:"A", q:"他/她平时用哪只手写字？", opts:["A. 左手","B. 右手","C. 两只手都会","D. 没注意过"]},
-  {mod:"A", q:"他/她书包上有什么装饰物吗？", opts:["A. 有挂件","B. 有贴纸","C. 什么都没有","D. 没注意过"]},
-  {mod:"A", q:"你们聊天时，他/她发消息常用什么风格？", opts:["A. 很多表情包","B. 纯文字","C. 语音","D. 没注意过"]},
-  {mod:"A", q:"他/她心情不好时会怎样？", opts:["A. 一个人待着","B. 找朋友","C. 强颜欢笑","D. 没注意过"]},
-  {mod:"A", q:"他/她吃饭有什么不吃的吗？", opts:["A. 有忌口","B. 没有","C. 挑食","D. 不知道"]},
+// ==================== 音频系统 ====================
+class AudioSystem {
+    constructor() {
+        this.ctx = null;
+        this.initialized = false;
+    }
+    init() {
+        if (this.initialized) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.initialized = true;
+    }
+    playTone(freq, start, duration, vol) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(vol, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+        osc.start(start);
+        osc.stop(start + duration);
+    }
+    playBirthdaySong() {
+        if (!this.ctx) this.init();
+        const notes = [
+            {f: 264, d: 0.4}, {f: 264, d: 0.4}, {f: 297, d: 0.8}, {f: 264, d: 0.8},
+            {f: 352, d: 0.8}, {f: 330, d: 1.2}, {f: 264, d: 0.4}, {f: 264, d: 0.4},
+            {f: 297, d: 0.8}, {f: 264, d: 0.8}, {f: 396, d: 0.8}, {f: 352, d: 1.2},
+            {f: 264, d: 0.4}, {f: 264, d: 0.4}, {f: 528, d: 0.8}, {f: 440, d: 0.8},
+            {f: 352, d: 0.8}, {f: 330, d: 0.8}, {f: 297, d: 1.2}
+        ];
+        let time = this.ctx.currentTime;
+        notes.forEach(n => {
+            this.playTone(n.f, time, n.d, 0.1);
+            time += n.d;
+        });
+    }
+    playOpen() {
+        if (!this.ctx) this.init();
+        const now = this.ctx.currentTime;
+        this.playTone(523, now, 0.15, 0.08);
+        this.playTone(659, now + 0.1, 0.2, 0.08);
+        this.playTone(784, now + 0.25, 0.3, 0.06);
+    }
+    playLaunch() {
+        if (!this.ctx) this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.5);
+        osc.type = 'sawtooth';
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+    playExplosion() {
+        if (!this.ctx) this.init();
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.3;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.04));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const g = this.ctx.createGain();
+        g.gain.value = 0.08;
+        noise.connect(g);
+        g.connect(this.ctx.destination);
+        noise.start();
+    }
+}
 
-  // ===== 模块B：价值观与选择（30题）=====
-  {mod:"B", q:"如果班主任让你和一个你不太喜欢的人组队做项目，你会？", opts:["A. 接受，认真完成","B. 接受但敷衍","C. 想办法换组","D. 直接拒绝"]},
-  {mod:"B", q:"考试时发现好朋友在作弊，你会？", opts:["A. 提醒他/她别这样","B. 装作没看见","C. 告诉老师","D. 心里鄙视但不说"]},
-  {mod:"B", q:"你攒了很久的钱想买一样东西，但朋友突然急用钱，你会？", opts:["A. 借给朋友","B. 借一部分","C. 不借，先买自己的","D. 看情况"]},
-  {mod:"B", q:"如果你发现喜欢的人其实有对象了，你会？", opts:["A. 保持距离","B. 继续做朋友","C. 等他们分手","D. 不在乎，继续追"]},
-  {mod:"B", q:"班级投票选班长，你朋友和你竞争，你会？", opts:["A. 公平竞争","B. 让给朋友","C. 暗中拉票","D. 退出"]},
-  {mod:"B", q:"你在路上捡到一个钱包，里面有2000块钱和身份证，你会？", opts:["A. 交给警察","B. 根据身份证联系失主","C. 把钱拿走，钱包扔掉","D. 交给学校"]},
-  {mod:"B", q:"你的作业 deadline 到了但没写完，有机会抄同学的，你会？", opts:["A. 抄一部分","B. 全部抄","C. 不抄，接受迟交","D. 编个理由延期"]},
-  {mod:"B", q:"你看到有人在欺负一个弱小的同学，你会？", opts:["A. 上前制止","B. 告诉老师","C. 旁观不插手","D. 走开"]},
-  {mod:"B", q:"你最好的朋友在背后说你坏话被你听到了，你会？", opts:["A. 当面质问","B. 慢慢疏远","C. 假装不知道","D. 也背后说他/她"]},
-  {mod:"B", q:"如果你可以用一个小谎言换来很大的好处，你会？", opts:["A. 不会说谎","B. 看情况","C. 会，只要不被发现","D. 经常这样做"]},
-  {mod:"B", q:"如果你必须选择和一个人过周末，你会选？", opts:["A. 喜欢的人","B. 最好的朋友","C. 家人","D. 一个人待着"]},
-  {mod:"B", q:"如果喜欢的人让你放弃一个很重要的机会陪他/她，你会？", opts:["A. 放弃机会","B. 说服他/她理解","C. 偷偷去不告诉他/她","D. 直接拒绝"]},
-  {mod:"B", q:"如果你的恋人和你最好的朋友同时掉进水里（都会游泳），你先救谁？", opts:["A. 恋人","B. 朋友","C. 两个一起救","D. 喊人帮忙"]},
-  {mod:"B", q:"如果喜欢的人生病了，但你明天有重要考试，你会？", opts:["A. 去照顾他/她","B. 考完试再去","C. 发个消息问候","D. 让朋友代看"]},
-  {mod:"B", q:"如果你发现恋人在骗你，但骗你是为了你好，你会？", opts:["A. 原谅","B. 生气但理解","C. 无法原谅","D. 装作不知道"]},
-  {mod:"B", q:"你觉得自己的优点是？", opts:["A. 善良","B. 聪明","C. 幽默","D. 努力"]},
-  {mod:"B", q:"你觉得自己最大的缺点是？", opts:["A. 太敏感","B. 太懒","C. 太冲动","D. 太内向"]},
-  {mod:"B", q:"你觉得自己是一个容易嫉妒别人的人吗？", opts:["A. 完全不会","B. 偶尔","C. 经常","D. 不知道"]},
-  {mod:"B", q:"你觉得别人对你的第一印象通常是？", opts:["A. 好相处","B. 高冷","C. 活泼","D. 普通"]},
-  {mod:"B", q:"你觉得自己值得被喜欢吗？", opts:["A. 当然值得","B. 有时候觉得","C. 不太确定","D. 不值得"]},
-  {mod:"B", q:"你理想的高中/大学是？", opts:["A. 名校","B. 普通学校就好","C. 还没想好","D. 不想上学"]},
-  {mod:"B", q:"你未来想做什么工作？", opts:["A. 稳定的","B. 高薪的","C. 自己喜欢的","D. 还没想好"]},
-  {mod:"B", q:"你觉得恋爱和学习哪个更重要？", opts:["A. 学习","B. 恋爱","C. 都重要","D. 都不重要"]},
-  {mod:"B", q:"你希望自己30岁时是什么样？", opts:["A. 事业有成","B. 家庭幸福","C. 自由自在","D. 没想过"]},
-  {mod:"B", q:"如果必须放弃一样，你会放弃？", opts:["A. 手机","B. 朋友","C. 游戏","D. 零食"]},
-  // 矛盾检测
-  {mod:"B", q:"如果你发现好朋友考试作弊，你会怎么做？", opts:["A. 提醒他/她","B. 不管","C. 举报","D. 心里不舒服"]},
-  {mod:"B", q:"你觉得自己是个容易嫉妒的人吗？", opts:["A. 从不","B. 偶尔","C. 经常","D. 不知道"]},
-  {mod:"B", q:"如果喜欢的人有对象了，你会？", opts:["A. 保持距离","B. 继续做朋友","C. 等待机会","D. 无所谓"]},
-  {mod:"B", q:"你觉得学习和恋爱哪个更重要？", opts:["A. 学习","B. 恋爱","C. 都重要","D. 都不重要"]},
-  {mod:"B", q:"你觉得自己最大的缺点是？", opts:["A. 敏感","B. 懒惰","C. 冲动","D. 内向"]},
+const audio = new AudioSystem();
 
-  // ===== 模块C：应急反应与本能（30题）=====
-  {mod:"C", q:"你正在和喜欢的人聊天，突然他/她哭了，你第一反应是？", opts:["A. 问怎么了","B. 递纸巾","C. 抱住他/她","D. 不知所措"]},
-  {mod:"C", q:"你在食堂排队，有人插在你前面，你会？", opts:["A. 直接说请排队","B. 心里不爽但不说","C. 插到更前面","D. 换一队"]},
-  {mod:"C", q:"你走路时不小心撞到了喜欢的人，你会？", opts:["A. 马上道歉","B. 尴尬地笑","C. 假装没事走开","D. 借机搭话"]},
-  {mod:"C", q:"你正在上课，突然收到喜欢的人消息说'我很难过'，你会？", opts:["A. 马上回复","B. 下课再回","C. 偷偷看手机回复","D. 先问怎么了"]},
-  {mod:"C", q:"你和喜欢的人一起走路，突然下雨了，你会？", opts:["A. 把伞给他/她","B. 一起撑伞","C. 拉着他/她跑","D. 找地方躲雨"]},
-  {mod:"C", q:"考试前一夜，喜欢的人突然找你聊天，你会？", opts:["A. 陪他/她聊","B. 说我要复习","C. 聊一会儿就去复习","D. 边复习边聊"]},
-  {mod:"C", q:"你在全班面前发言，看到喜欢的人看着你，你会？", opts:["A. 更紧张","B. 更自信","C. 不敢看他/她","D. 没感觉"]},
-  {mod:"C", q:"你听说喜欢的人和别人传绯闻，你第一反应是？", opts:["A. 问他/她是不是真的","B. 心里难受但不说","C. 无所谓","D. 打听详情"]},
-  {mod:"C", q:"你正在打游戏/看视频，喜欢的人突然打电话来，你会？", opts:["A. 马上接","B. 打完这局再接","C. 挂掉回消息","D. 假装没看到"]},
-  {mod:"C", q:"你和喜欢的人吵架了，他/她一天没理你，你会？", opts:["A. 主动道歉","B. 等他/她先开口","C. 找朋友倾诉","D. 也赌气不理"]},
-  // 极端情境（疲劳陷阱核心）
-  {mod:"C", q:"<span class=\'urgent\'>【紧急】</span>如果你必须在救一个陌生人和救喜欢的人之间选一个，且只能选一个，你会？", opts:["A. 救陌生人","B. 救喜欢的人","C. 两个都救（可能都死）","D. 逃跑"]},
-  {mod:"C", q:"<span class=\'urgent\'>【紧急】</span>如果你发现喜欢的人其实一直在利用你，你会？", opts:["A. 马上断绝关系","B. 装作不知道继续","C. 质问清楚","D. 报复他/她"]},
-  {mod:"C", q:"<span class=\'urgent\'>【紧急】</span>如果全世界都反对你和喜欢的人在一起，你会？", opts:["A. 坚持在一起","B. 分手","C. 偷偷在一起","D. 看对方态度"]},
-  {mod:"C", q:"<span class=\'urgent\'>【紧急】</span>如果你和喜欢的人同时被困在电梯里，你会？", opts:["A. 安慰他/她","B. 自己也很慌","C. 想办法求救","D. 趁机表白"]},
-  {mod:"C", q:"<span class=\'urgent\'>【紧急】</span>如果喜欢的人对你说'我从来没有喜欢过你'，你会？", opts:["A. 接受现实","B. 追问原因","C. 哭着求他/她","D. 笑着说没关系"]},
-  {mod:"C", q:"你的朋友都不喜欢你喜欢的人，你会？", opts:["A. 不管朋友怎么说","B. 慢慢疏远喜欢的人","C. 试图让朋友接受","D. 隐瞒自己的喜欢"]},
-  {mod:"C", q:"你喜欢的人向你借钱但不还，你会？", opts:["A. 提醒他/她还","B. 算了不要了","C. 暗示","D. 以后不借了"]},
-  {mod:"C", q:"你喜欢的人在你面前说别人坏话，你会？", opts:["A. 附和","B. 转移话题","C. 为那个人说话","D. 沉默"]},
-  {mod:"C", q:"你喜欢的人做了你讨厌的事，你会？", opts:["A. 直接说","B. 忍着","C. 慢慢疏远","D. 用同样方式对他/她"]},
-  {mod:"C", q:"你喜欢的人误会你了，你会？", opts:["A. 解释清楚","B. 等他/她发现","C. 生气不理","D. 找朋友帮忙解释"]},
-  {mod:"C", q:"有人当面说你喜欢的人坏话，你会？", opts:["A. 反驳","B. 沉默","C. 附和","D. 走开"]},
-  {mod:"C", q:"你喜欢的人突然牵你的手，你会？", opts:["A. 握紧","B. 缩回","C. 愣住","D. 反牵"]},
-  {mod:"C", q:"你喜欢的人送了你不喜欢的东西，你会？", opts:["A. 说喜欢","B. 诚实说不太喜欢","C. 委婉表达","D. 直接扔掉"]},
-  {mod:"C", q:"你喜欢的人在你面前哭了，你最想做什么？", opts:["A. 抱住他/她","B. 递纸巾","C. 说别哭了","D. 陪他/她一起哭"]},
-  {mod:"C", q:"你喜欢的人突然亲了你一下，你会？", opts:["A. 亲回去","B. 愣住","C. 推开","D. 脸红跑开"]},
-  // 矛盾检测
-  {mod:"C", q:"你正在上课，喜欢的人发消息说难过，你会？", opts:["A. 马上回","B. 下课回","C. 偷偷回","D. 先问怎么了"]},
-  {mod:"C", q:"如果你必须在陌生人和喜欢的人之间救一个，你会？", opts:["A. 救陌生人","B. 救喜欢的人","C. 都救","D. 逃跑"]},
-  {mod:"C", q:"你喜欢的人误会你了，你会怎么做？", opts:["A. 解释","B. 等他自己发现","C. 生气","D. 找朋友"]},
-  {mod:"C", q:"有人当面说你喜欢的人坏话，你的反应是？", opts:["A. 反驳","B. 沉默","C. 附和","D. 走开"]},
-  {mod:"C", q:"你和喜欢的人吵架一天没联系，你会？", opts:["A. 主动找","B. 等他/她","C. 找朋友","D. 赌气"]},
+// ==================== Three.js 场景 ====================
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000011, 0.001);
 
-  // ===== 模块D：深层心理与承诺（30题）=====
-  {mod:"D", q:"你觉得一段好的感情最重要的是？", opts:["A. 信任","B. 激情","C. 陪伴","D. 自由"]},
-  {mod:"D", q:"你能接受异地恋吗？", opts:["A. 可以","B. 看情况","C. 不太行","D. 完全不行"]},
-  {mod:"D", q:"你觉得恋爱中应该有自己的隐私空间吗？", opts:["A. 应该有","B. 完全透明","C. 看情况","D. 无所谓"]},
-  {mod:"D", q:"你能接受对方的缺点到什么程度？", opts:["A. 完全接受","B. 大部分接受","C. 选择性接受","D. 很难接受"]},
-  {mod:"D", q:"你觉得谈恋爱应该告诉父母吗？", opts:["A. 应该","B. 不应该","C. 看情况","D. 无所谓"]},
-  {mod:"D", q:"如果为了和喜欢的人在一起，你需要放弃一个梦想，你会？", opts:["A. 放弃梦想","B. 不放弃","C. 想办法兼顾","D. 看值不值得"]},
-  {mod:"D", q:"如果喜欢的人得了重病，你会？", opts:["A. 一直陪着他/她","B. 陪一段时间","C. 不知道","D. 可能会离开"]},
-  {mod:"D", q:"如果为了喜欢的人，你需要和最好的朋友绝交，你会？", opts:["A. 绝交","B. 不绝交","C. 两边协调","D. 看情况"]},
-  {mod:"D", q:"如果喜欢的人变胖了/变丑了，你还会喜欢他/她吗？", opts:["A. 会","B. 可能会减少","C. 不会","D. 看程度"]},
-  {mod:"D", q:"如果喜欢的人家里很穷，你会介意吗？", opts:["A. 不介意","B. 有点介意","C. 很介意","D. 看情况"]},
-  {mod:"D", q:"你在喜欢的人面前会伪装自己吗？", opts:["A. 不会","B. 偶尔","C. 经常","D. 一直在伪装"]},
-  {mod:"D", q:"你觉得真实的自己值得被爱吗？", opts:["A. 值得","B. 有时候觉得","C. 不太值得","D. 不知道"]},
-  {mod:"D", q:"你敢在喜欢的人面前展示自己的脆弱吗？", opts:["A. 敢","B. 不敢","C. 看情况","D. 从来没想过"]},
-  {mod:"D", q:"你觉得喜欢一个人需要理由吗？", opts:["A. 需要","B. 不需要","C. 说不清","D. 看情况"]},
-  {mod:"D", q:"你愿意为喜欢的人改变自己吗？", opts:["A. 愿意","B. 不愿意","C. 改一部分","D. 看改什么"]},
-  {mod:"D", q:"你觉得恋爱多久可以见家长？", opts:["A. 半年内","B. 一年","C. 两年以上","D. 不想见"]},
-  {mod:"D", q:"你觉得恋爱多久可以牵手？", opts:["A. 马上","B. 一个月","C. 三个月","D. 看感觉"]},
-  {mod:"D", q:"你觉得一段恋爱最少要谈多久才算认真？", opts:["A. 一个月","B. 三个月","C. 半年","D. 一年以上"]},
-  {mod:"D", q:"你能接受多久不联系？", opts:["A. 一天","B. 一周","C. 一个月","D. 多久都行"]},
-  {mod:"D", q:"你觉得结婚的最佳年龄是？", opts:["A. 20-25","B. 25-30","C. 30以后","D. 不想结婚"]},
-  {mod:"D", q:"你喜欢的人和其他异性走得很近，你会？", opts:["A. 吃醋","B. 无所谓","C. 提醒他/她","D. 也找别人"]},
-  {mod:"D", q:"你能接受喜欢的人有异性闺蜜吗？", opts:["A. 能","B. 不能","C. 看情况","D. 假装能"]},
-  {mod:"D", q:"你会偷偷看喜欢的人手机吗？", opts:["A. 会","B. 不会","C. 想过但没做","D. 看机会"]},
-  {mod:"D", q:"如果喜欢的人不回你消息，你会？", opts:["A. 继续发","B. 等","C. 生气","D. 找别人"]},
-  {mod:"D", q:"你觉得恋爱中谁应该主动？", opts:["A. 男生","B. 女生","C. 谁想谁就主动","D. 轮流"]},
-  // 矛盾检测
-  {mod:"D", q:"你觉得恋爱中应该有隐私空间吗？", opts:["A. 应该有","B. 完全透明","C. 看情况","D. 无所谓"]},
-  {mod:"D", q:"你觉得真实的自己值得被爱吗？", opts:["A. 值得","B. 有时候","C. 不太值得","D. 不知道"]},
-  {mod:"D", q:"你愿意为喜欢的人改变自己吗？", opts:["A. 愿意","B. 不愿意","C. 改一部分","D. 看情况"]},
-  {mod:"D", q:"如果喜欢的人很久不回你消息，你会怎么想？", opts:["A. 他/她很忙","B. 他/她不想理我","C. 手机没电了","D. 无所谓"]},
-  {mod:"D", q:"你觉得一段好的感情最重要的是什么？", opts:["A. 信任","B. 激情","C. 陪伴","D. 自由"]},
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+camera.position.set(0, 8, 30);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+// 灯光
+scene.add(new THREE.AmbientLight(0x1a1a3e, 0.6));
+const moonLight = new THREE.DirectionalLight(0x6666ff, 0.4);
+moonLight.position.set(50, 100, 50);
+scene.add(moonLight);
+
+// ==================== 星空 ====================
+const starCount = 2000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+    starPos[i * 3] = (Math.random() - 0.5) * 800;
+    starPos[i * 3 + 1] = (Math.random() - 0.5) * 800;
+    starPos[i * 3 + 2] = (Math.random() - 0.5) * 800;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+
+const starMat = new THREE.ShaderMaterial({
+    uniforms: {
+        time: { value: 0 },
+        color: { value: new THREE.Color(0xffffff) }
+    },
+    vertexShader: `
+        varying float vAlpha;
+        uniform float time;
+        void main() {
+            vAlpha = 0.5 + 0.5 * sin(time * 2.0 + position.x * 0.01);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = 2.0 * (300.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `,
+    fragmentShader: `
+        uniform vec3 color;
+        varying float vAlpha;
+        void main() {
+            float dist = length(gl_PointCoord - vec2(0.5));
+            if (dist > 0.5) discard;
+            float alpha = (1.0 - dist * 2.0) * vAlpha;
+            gl_FragColor = vec4(color, alpha);
+        }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// ==================== 湖面 ====================
+const lakeGeo = new THREE.PlaneGeometry(200, 200, 32, 32);
+const lakeMat = new THREE.MeshPhongMaterial({
+    color: 0x0a0a2e,
+    emissive: 0x050520,
+    specular: 0x4444ff,
+    shininess: 100,
+    transparent: true,
+    opacity: 0.9,
+    side: THREE.DoubleSide
+});
+const lake = new THREE.Mesh(lakeGeo, lakeMat);
+lake.rotation.x = -Math.PI / 2;
+lake.position.y = -10;
+scene.add(lake);
+
+// ==================== 萤火虫 ====================
+const fireflyCount = 60;
+const fireflies = [];
+for (let i = 0; i < fireflyCount; i++) {
+    const geo = new THREE.SphereGeometry(0.08, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        transparent: true,
+        opacity: 0.8
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(
+        (Math.random() - 0.5) * 50,
+        Math.random() * 15 - 3,
+        (Math.random() - 0.5) * 50
+    );
+    mesh.userData = {
+        vx: (Math.random() - 0.5) * 0.03,
+        vy: (Math.random() - 0.5) * 0.02,
+        vz: (Math.random() - 0.5) * 0.03,
+        baseY: mesh.position.y,
+        phase: Math.random() * Math.PI * 2
+    };
+    scene.add(mesh);
+    fireflies.push(mesh);
+}
+
+// ==================== 信封创建 ====================
+const envelopes = [];
+const envelopeData = [
+    {
+        color: 0xc41e3a,
+        position: new THREE.Vector3(-12, 0, 0),
+        text: '旁白，生日快乐。谢谢你陪我玩MC，那些一起挖矿、建房子的时光，是我最好的游戏回忆。',
+        opened: false
+    },
+    {
+        color: 0x2e8b57,
+        position: new THREE.Vector3(0, 2, -3),
+        text: '这次不能去香港陪你过生日，真的很遗憾。但你要知道，距离再远，朋友的心是连在一起的。愿你新的一岁，想要的都能实现，快乐不止生日。',
+        opened: false
+    },
+    {
+        color: 0x4169e1,
+        position: new THREE.Vector3(12, 0, 0),
+        text: '等下次见面，咱们MC里建个更大的房子，或者联机打通所有模组。生日快乐，旁白。最好的朋友。',
+        opened: false
+    }
 ];
 
-// ========== 矛盾题对（用于解密时检测一致性）==========
-const contradictionPairs = [
-  [7,25], [3,26], [5,27], [10,28], [18,29],
-  [31,55], [47,56], [33,57], [52,58], [46,59],
-  [63,85], [70,86], [79,87], [80,88], [69,89],
-  [92,115], [101,116], [104,117], [113,118], [90,119]
-];
+function createEnvelope(data, index) {
+    const group = new THREE.Group();
 
-// ========== 状态 ==========
-let answers = new Array(questions.length).fill(-1);
+    const bodyGeo = new THREE.BoxGeometry(3.5, 2.2, 0.2);
+    const bodyMat = new THREE.MeshStandardMaterial({
+        color: data.color,
+        roughness: 0.5,
+        metalness: 0.1
+    });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    group.add(body);
 
-// ========== 初始化星星背景 ==========
-function initStars() {
-  const stars = document.getElementById('stars');
-  for (let i = 0; i < 80; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    star.style.width = Math.random() * 3 + 1 + 'px';
-    star.style.height = star.style.width;
-    star.style.animationDelay = Math.random() * 3 + 's';
-    stars.appendChild(star);
-  }
+    const flapShape = new THREE.Shape();
+    flapShape.moveTo(-1.75, 0);
+    flapShape.lineTo(1.75, 0);
+    flapShape.lineTo(0, -1.1);
+    flapShape.lineTo(-1.75, 0);
+    const flapGeo = new THREE.ShapeGeometry(flapShape);
+    const flapMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(data.color).multiplyScalar(0.85),
+        roughness: 0.5,
+        side: THREE.DoubleSide
+    });
+    const flap = new THREE.Mesh(flapGeo, flapMat);
+    flap.position.set(0, 1.1, 0.11);
+    group.add(flap);
+
+    const ribbonH = new THREE.Mesh(
+        new THREE.BoxGeometry(3.7, 0.12, 0.25),
+        new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 })
+    );
+    ribbonH.position.y = 0.3;
+    group.add(ribbonH);
+
+    const ribbonV = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 2.4, 0.25),
+        new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 })
+    );
+    group.add(ribbonV);
+
+    const seal = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.25, 0.08, 16),
+        new THREE.MeshStandardMaterial({ color: 0x8B0000, metalness: 0.5, roughness: 0.4 })
+    );
+    seal.rotation.x = Math.PI / 2;
+    seal.position.set(0, 0.2, 0.13);
+    group.add(seal);
+
+    const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(2.5, 16, 16),
+        new THREE.MeshBasicMaterial({
+            color: data.color,
+            transparent: true,
+            opacity: 0.04,
+            depthWrite: false
+        })
+    );
+    group.add(glow);
+
+    const light = new THREE.PointLight(data.color, 0.6, 12);
+    light.position.set(0, 0, 2);
+    group.add(light);
+
+    group.position.copy(data.position);
+    group.userData = { index, data, flap, glow, originalY: data.position.y };
+    scene.add(group);
+    envelopes.push(group);
+    return group;
 }
-initStars();
 
-// ========== 兑换码验证 ==========
-function checkCode() {
-  const input = document.getElementById('codeInput').value.trim();
-  const error = document.getElementById('codeError');
-  if (input === 'Doyou520me') {
-    document.getElementById('modal').style.display = 'none';
-    document.getElementById('mainContainer').classList.add('show');
-    renderQuestions();
-  } else {
-    error.classList.add('show');
-    setTimeout(() => error.classList.remove('show'), 2000);
-  }
+envelopeData.forEach((data, i) => createEnvelope(data, i));
+
+// ==================== 真实烟花系统（上升+爆炸）====================
+const rockets = [];
+const explosions = [];
+
+function launchRealFirework() {
+    audio.playLaunch();
+
+    const startX = (Math.random() - 0.5) * 30;
+    const startZ = (Math.random() - 0.5) * 20;
+    const targetY = 15 + Math.random() * 15;
+    const color = [0xff0000, 0xffd700, 0x00ff00, 0x00bfff, 0xff69b4, 0xff8c00, 0xff1493, 0x7fff00][Math.floor(Math.random() * 8)];
+
+    // 上升火箭
+    const rocketGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const rocketMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const rocket = new THREE.Mesh(rocketGeo, rocketMat);
+    rocket.position.set(startX, -8, startZ);
+    scene.add(rocket);
+
+    // 尾迹粒子
+    const trailParticles = [];
+
+    rockets.push({
+        mesh: rocket,
+        trail: trailParticles,
+        vx: (Math.random() - 0.5) * 0.05,
+        vy: 0.3 + Math.random() * 0.1,
+        vz: (Math.random() - 0.5) * 0.05,
+        targetY: targetY,
+        color: color,
+        exploded: false
+    });
 }
-document.getElementById('codeInput').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') checkCode();
+
+function updateRockets() {
+    for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+
+        if (!r.exploded) {
+            // 上升
+            r.mesh.position.x += r.vx;
+            r.mesh.position.y += r.vy;
+            r.mesh.position.z += r.vz;
+            r.vy *= 0.985; // 减速
+
+            // 尾迹
+            const trailGeo = new THREE.SphereGeometry(0.08, 4, 4);
+            const trailMat = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.8
+            });
+            const trail = new THREE.Mesh(trailGeo, trailMat);
+            trail.position.copy(r.mesh.position);
+            trail.position.y -= 0.3;
+            scene.add(trail);
+            r.trail.push({ mesh: trail, life: 1 });
+
+            // 更新尾迹
+            for (let j = r.trail.length - 1; j >= 0; j--) {
+                r.trail[j].life -= 0.03;
+                r.trail[j].mesh.material.opacity = r.trail[j].life;
+                if (r.trail[j].life <= 0) {
+                    scene.remove(r.trail[j].mesh);
+                    r.trail.splice(j, 1);
+                }
+            }
+
+            // 到达最高点爆炸
+            if (r.vy < 0.05 || r.mesh.position.y >= r.targetY) {
+                r.exploded = true;
+                explodeFirework(r.mesh.position.x, r.mesh.position.y, r.mesh.position.z, r.color);
+                scene.remove(r.mesh);
+                r.trail.forEach(t => scene.remove(t.mesh));
+                rockets.splice(i, 1);
+            }
+        }
+    }
+}
+
+function explodeFirework(x, y, z, color) {
+    audio.playExplosion();
+
+    const particleCount = 80;
+    const particles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+        const geo = new THREE.SphereGeometry(0.06 + Math.random() * 0.06, 4, 4);
+        const mat = new THREE.MeshBasicMaterial({
+            color: color,
+            transparent: true,
+            opacity: 1
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y, z);
+
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const speed = Math.random() * 0.35 + 0.1;
+
+        particles.push({
+            mesh: mesh,
+            vx: Math.sin(phi) * Math.cos(theta) * speed,
+            vy: Math.cos(phi) * speed,
+            vz: Math.sin(phi) * Math.sin(theta) * speed,
+            life: 1,
+            decay: Math.random() * 0.008 + 0.005,
+            gravity: 0.003
+        });
+        scene.add(mesh);
+    }
+
+    // 闪光
+    const flash = new THREE.PointLight(color, 2, 30);
+    flash.position.set(x, y, z);
+    scene.add(flash);
+
+    explosions.push({
+        particles: particles,
+        flash: flash,
+        flashLife: 1
+    });
+}
+
+function updateExplosions() {
+    for (let i = explosions.length - 1; i >= 0; i--) {
+        const exp = explosions[i];
+        let alive = false;
+
+        // 更新闪光
+        if (exp.flashLife > 0) {
+            exp.flashLife -= 0.05;
+            exp.flash.intensity = exp.flashLife * 2;
+            if (exp.flashLife <= 0) {
+                scene.remove(exp.flash);
+            }
+        }
+
+        for (let j = exp.particles.length - 1; j >= 0; j--) {
+            const p = exp.particles[j];
+            p.mesh.position.x += p.vx;
+            p.mesh.position.y += p.vy;
+            p.mesh.position.z += p.vz;
+            p.vy -= p.gravity;
+            p.vx *= 0.995;
+            p.vz *= 0.995;
+            p.life -= p.decay;
+            p.mesh.material.opacity = Math.max(0, p.life);
+
+            if (p.life > 0) {
+                alive = true;
+            } else {
+                scene.remove(p.mesh);
+                exp.particles.splice(j, 1);
+            }
+        }
+
+        if (!alive) {
+            explosions.splice(i, 1);
+        }
+    }
+}
+
+// ==================== 真实光柱（体积光效果）====================
+let lightPillar = null;
+let pillarLight = null;
+
+function createRealLightPillar() {
+    // 多层圆柱体模拟体积光
+    const group = new THREE.Group();
+
+    for (let i = 0; i < 5; i++) {
+        const radius = 0.5 + i * 0.4;
+        const height = 30 + i * 2;
+        const geo = new THREE.CylinderGeometry(radius * 0.3, radius, height, 16, 1, true);
+        const mat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0xffd700).lerp(new THREE.Color(0xffaa00), i / 5),
+            transparent: true,
+            opacity: 0.06 - i * 0.01,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.y = height / 2 - 8;
+        group.add(mesh);
+    }
+
+    // 底部光晕
+    const glowGeo = new THREE.RingGeometry(0.5, 4, 32);
+    const glowMat = new THREE.MeshBasicMaterial({
+        color: 0xffd700,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.y = -8;
+    group.add(glow);
+
+    // 顶部光点
+    const topGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 16, 16),
+        new THREE.MeshBasicMaterial({
+            color: 0xffffaa,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        })
+    );
+    topGlow.position.y = 22;
+    group.add(topGlow);
+
+    // 真实点光源
+    pillarLight = new THREE.PointLight(0xffd700, 1.5, 50);
+    pillarLight.position.set(0, 5, 0);
+    scene.add(pillarLight);
+
+    lightPillar = group;
+    scene.add(group);
+
+    // 淡入
+    group.children.forEach(c => {
+        c.material.opacity = 0;
+    });
+
+    let op = 0;
+    const fadeIn = () => {
+        op += 0.005;
+        group.children.forEach((c, i) => {
+            if (c.material.opacity !== undefined) {
+                c.material.opacity = Math.min((0.06 - i * 0.01) || 0.15, op * (1 - i * 0.15));
+            }
+        });
+        pillarLight.intensity = Math.min(1.5, op * 3);
+        if (op < 1) requestAnimationFrame(fadeIn);
+    };
+    fadeIn();
+}
+
+// ==================== 祝福文字（更多内容）====================
+let blessingGroup = null;
+
+function createTextTexture(text, fontSize, color, glow) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const w = 1024;
+    const h = 128;
+    canvas.width = w;
+    canvas.height = h;
+
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.font = `bold ${fontSize}px Microsoft YaHei, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (glow) {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 40;
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, w / 2, h / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    return texture;
+}
+
+function showBlessingText() {
+    if (blessingGroup) return;
+    blessingGroup = new THREE.Group();
+
+    // 主标题
+    const mainTex = createTextTexture('旁白，生日快乐', 55, '#ffd700', true);
+    const mainMat = new THREE.SpriteMaterial({
+        map: mainTex,
+        transparent: true,
+        opacity: 0,
+        depthTest: false
+    });
+    const mainSprite = new THREE.Sprite(mainMat);
+    mainSprite.scale.set(20, 2.5, 1);
+    mainSprite.position.set(0, 8, 0);
+    blessingGroup.add(mainSprite);
+
+    // 副标题
+    const subTex = createTextTexture('愿你的每一天都闪闪发光', 32, '#ffaa55', false);
+    const subMat = new THREE.SpriteMaterial({
+        map: subTex,
+        transparent: true,
+        opacity: 0,
+        depthTest: false
+    });
+    const subSprite = new THREE.Sprite(subMat);
+    subSprite.scale.set(14, 1.75, 1);
+    subSprite.position.set(0, 5.5, 0);
+    blessingGroup.add(subSprite);
+
+    // 环绕祝福（8条，更多内容）
+    const texts = [
+        '最好的朋友',
+        '生日快乐',
+        '心想事成',
+        '友谊长存',
+        '前程似锦',
+        '笑口常开',
+        '万事顺遂',
+        '来日方长'
+    ];
+    texts.forEach((text, i) => {
+        const tex = createTextTexture(text, 26, '#ffd700', false);
+        const mat = new THREE.SpriteMaterial({
+            map: tex,
+            transparent: true,
+            opacity: 0,
+            depthTest: false
+        });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(6, 1.5, 1);
+        const angle = (i / texts.length) * Math.PI * 2;
+        sprite.userData = { 
+            angle, 
+            radius: 16, 
+            speed: 0.15, 
+            yBase: 1 + (i % 3) * 2 
+        };
+        sprite.position.set(
+            Math.cos(angle) * 16,
+            sprite.userData.yBase,
+            Math.sin(angle) * 16
+        );
+        blessingGroup.add(sprite);
+    });
+
+    scene.add(blessingGroup);
+
+    // 淡入
+    let op = 0;
+    const fadeIn = () => {
+        op += 0.012;
+        blessingGroup.children.forEach(c => {
+            c.material.opacity = Math.min(1, op);
+        });
+        if (op < 1) requestAnimationFrame(fadeIn);
+    };
+    fadeIn();
+}
+
+// ==================== 交互 ====================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let isDragging = false;
+let previousMouse = { x: 0, y: 0 };
+let cameraAngle = { theta: 0, phi: Math.PI / 2.5 };
+let openedCount = 0;
+let allOpened = false;
+
+function getEventPos(e) {
+    if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+}
+
+function onPointerMove(e) {
+    const pos = getEventPos(e);
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((pos.x - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((pos.y - rect.top) / rect.height) * 2 + 1;
+
+    if (isDragging) {
+        const dx = pos.x - previousMouse.x;
+        const dy = pos.y - previousMouse.y;
+        cameraAngle.theta -= dx * 0.005;
+        cameraAngle.phi = Math.max(0.3, Math.min(Math.PI - 0.3, cameraAngle.phi - dy * 0.005));
+        updateCamera();
+    }
+    previousMouse.x = pos.x;
+    previousMouse.y = pos.y;
+
+    raycaster.setFromCamera(mouse, camera);
+    let hovering = false;
+    for (let group of envelopes) {
+        const intersects = raycaster.intersectObjects(group.children, true);
+        if (intersects.length > 0 && !group.userData.data.opened) {
+            hovering = true;
+            break;
+        }
+    }
+    renderer.domElement.style.cursor = hovering ? 'pointer' : (isDragging ? 'grabbing' : 'grab');
+}
+
+function onPointerDown(e) {
+    const pos = getEventPos(e);
+    isDragging = true;
+    previousMouse.x = pos.x;
+    previousMouse.y = pos.y;
+
+    raycaster.setFromCamera(mouse, camera);
+    for (let group of envelopes) {
+        const intersects = raycaster.intersectObjects(group.children, true);
+        if (intersects.length > 0 && !group.userData.data.opened) {
+            openEnvelope(group);
+            isDragging = false;
+            break;
+        }
+    }
+}
+
+function onPointerUp() {
+    isDragging = false;
+}
+
+function updateCamera() {
+    const r = 30;
+    camera.position.x = r * Math.sin(cameraAngle.phi) * Math.cos(cameraAngle.theta);
+    camera.position.y = r * Math.cos(cameraAngle.phi);
+    camera.position.z = r * Math.sin(cameraAngle.phi) * Math.sin(cameraAngle.theta);
+    camera.lookAt(0, 0, 0);
+}
+
+function openEnvelope(group) {
+    audio.init();
+    audio.playOpen();
+
+    group.userData.data.opened = true;
+    openedCount++;
+    document.getElementById('dot-' + group.userData.index).classList.add('opened');
+
+    const flap = group.userData.flap;
+    let rot = 0;
+    const openAnim = () => {
+        rot += 0.06;
+        flap.rotation.x = -rot;
+        if (rot < Math.PI) requestAnimationFrame(openAnim);
+    };
+    openAnim();
+
+    for (let i = 0; i < 15; i++) {
+        const geo = new THREE.PlaneGeometry(0.2, 0.2);
+        const mat = new THREE.MeshBasicMaterial({
+            color: [0xffd700, 0xff6b6b, 0x4ecdc4, 0xff69b4][Math.floor(Math.random() * 4)],
+            side: THREE.DoubleSide,
+            transparent: true
+        });
+        const p = new THREE.Mesh(geo, mat);
+        p.position.copy(group.position);
+        p.userData = {
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: Math.random() * 0.2 + 0.05,
+            vz: (Math.random() - 0.5) * 0.2,
+            rotX: Math.random() * 0.1,
+            rotY: Math.random() * 0.1,
+            life: 1
+        };
+        scene.add(p);
+
+        const animateP = () => {
+            p.position.x += p.userData.vx;
+            p.position.y += p.userData.vy;
+            p.position.z += p.userData.vz;
+            p.rotation.x += p.userData.rotX;
+            p.rotation.y += p.userData.rotY;
+            p.userData.vy -= 0.004;
+            p.userData.life -= 0.015;
+            p.material.opacity = p.userData.life;
+            if (p.userData.life > 0) requestAnimationFrame(animateP);
+            else scene.remove(p);
+        };
+        animateP();
+    }
+
+    setTimeout(() => showLetter(group.userData.data.text), 400);
+
+    if (openedCount >= 3 && !allOpened) {
+        allOpened = true;
+        setTimeout(() => celebrate(), 1500);
+    }
+}
+
+function showLetter(text) {
+    const overlay = document.getElementById('letter-overlay');
+    const paper = document.getElementById('letter-paper');
+    const textEl = document.getElementById('letter-text');
+
+    textEl.innerHTML = '';
+    const sentences = text.split('。').filter(l => l.trim());
+    sentences.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.textContent = s + (i < sentences.length - 1 ? '。' : '');
+        textEl.appendChild(div);
+    });
+
+    overlay.classList.add('active');
+    setTimeout(() => paper.classList.add('show'), 50);
+
+    const lines = textEl.querySelectorAll('.line');
+    lines.forEach((line, i) => {
+        setTimeout(() => line.classList.add('show'), i * 500 + 300);
+    });
+}
+
+function closeLetter() {
+    const overlay = document.getElementById('letter-overlay');
+    const paper = document.getElementById('letter-paper');
+    paper.classList.remove('show');
+    setTimeout(() => overlay.classList.remove('active'), 300);
+}
+
+document.getElementById('letter-overlay').addEventListener('click', closeLetter);
+document.querySelector('.letter-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeLetter();
 });
 
-// ========== 渲染题目 ==========
-function renderQuestions() {
-  const area = document.getElementById('questionsArea');
-  let currentMod = '';
-  const modNames = {A: '日常相处与细节观察', B: '价值观与选择', C: '应急反应与本能', D: '深层心理与承诺'};
+function celebrate() {
+    document.getElementById('hint').textContent = '所有祝福已收集完成！';
 
-  questions.forEach((q, idx) => {
-    if (q.mod !== currentMod) {
-      currentMod = q.mod;
-      const title = document.createElement('div');
-      title.className = 'module-title';
-      title.innerHTML = `<div class="num">${q.mod}</div>${modNames[q.mod]}`;
-      area.appendChild(title);
-    }
+    createRealLightPillar();
 
-    const card = document.createElement('div');
-    card.className = 'question-card';
-    card.id = 'q' + idx;
-    card.innerHTML = `
-      <div class="question-num">第 ${idx + 1} 题</div>
-      <div class="question-text">${q.q}</div>
-      <div class="options">
-        ${q.opts.map((opt, oi) => `
-          <div class="option" onclick="selectOption(${idx}, ${oi}, this)">
-            <div class="option-letter">${String.fromCharCode(65 + oi)}</div>
-            <span>${opt.substring(2)}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-    area.appendChild(card);
-  });
-}
+    // 真实烟花：上升后爆炸
+    let count = 0;
+    const interval = setInterval(() => {
+        launchRealFirework();
+        count++;
+        if (count >= 20) clearInterval(interval);
+    }, 600);
 
-// ========== 选择选项 ==========
-function selectOption(qIdx, optIdx, el) {
-  const card = document.getElementById('q' + qIdx);
-  const options = card.querySelectorAll('.option');
-  options.forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  card.classList.add('answered');
-  answers[qIdx] = optIdx;
-  updateProgress();
-}
-
-// ========== 更新进度 ==========
-function updateProgress() {
-  const answered = answers.filter(a => a !== -1).length;
-  const pct = (answered / questions.length) * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = `已完成 ${answered} / ${questions.length} 题`;
-
-  if (answered === questions.length) {
-    document.getElementById('submitBtn').classList.add('show');
-  }
-}
-
-// ========== 提交测试 ==========
-function submitTest() {
-  if (answers.includes(-1)) {
-    alert('还有题目没答完哦，请检查进度条');
-    return;
-  }
-
-  // 直接生成数字串（0=A, 1=B, 2=C, 3=D）
-  const code = answers.join('');
-
-  document.getElementById('mainContainer').style.display = 'none';
-  document.getElementById('resultPage').classList.add('show');
-  document.getElementById('codeDisplay').textContent = code;
-}
-
-// ========== 复制密钥 ==========
-function copyCode() {
-  const code = document.getElementById('codeDisplay').textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '✅ 已复制！';
-    btn.classList.add('copied');
+    setTimeout(() => audio.playBirthdaySong(), 800);
+    setTimeout(() => showBlessingText(), 2500);
     setTimeout(() => {
-      btn.textContent = '📋 一键复制密钥';
-      btn.classList.remove('copied');
-    }, 2000);
-  });
+        document.getElementById('hint').style.opacity = 0;
+    }, 8000);
 }
 
-// ========== 解密工具（你自己用）==========
-function decodeAnswers() {
-  const input = document.getElementById('decodeInput').value.trim();
-  const output = document.getElementById('decodeOutput');
-  try {
-    const decoded = input.split('').map(Number);
-    if (decoded.length !== questions.length) {
-      output.innerHTML = '<div style="color:#ff6b6b">密钥长度不匹配，可能已损坏</div>';
-      return;
+// 事件绑定
+const canvas = renderer.domElement;
+canvas.addEventListener('mousemove', onPointerMove);
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('touchstart', (e) => { onPointerDown(e); }, { passive: false });
+canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onPointerMove(e); }, { passive: false });
+canvas.addEventListener('touchend', onPointerUp);
+
+// ==================== 动画循环 ====================
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+
+    // 星空
+    stars.rotation.y = time * 0.015;
+    starMat.uniforms.time.value = time;
+
+    // 萤火虫
+    fireflies.forEach(f => {
+        f.position.x += f.userData.vx + Math.sin(time * 0.5 + f.userData.phase) * 0.005;
+        f.position.y = f.userData.baseY + Math.sin(time * 1.5 + f.userData.phase) * 0.8;
+        f.position.z += f.userData.vz + Math.cos(time * 0.4 + f.userData.phase) * 0.005;
+        f.material.opacity = 0.4 + Math.sin(time * 3 + f.userData.phase) * 0.4;
+
+        if (Math.abs(f.position.x) > 25) f.userData.vx *= -1;
+        if (Math.abs(f.position.z) > 25) f.userData.vz *= -1;
+    });
+
+    // 信封浮动
+    envelopes.forEach((group, i) => {
+        if (!group.userData.data.opened) {
+            group.position.y = group.userData.originalY + Math.sin(time * 1.2 + i * 2) * 0.4;
+            group.rotation.y = Math.sin(time * 0.4 + i) * 0.08;
+        }
+        group.userData.glow.material.opacity = 0.02 + Math.sin(time * 2 + i) * 0.02;
+    });
+
+    // 湖面波动
+    const lakePos = lake.geometry.attributes.position.array;
+    for (let i = 0; i < lakePos.length; i += 3) {
+        const x = lakePos[i];
+        const z = lakePos[i + 2];
+        lakePos[i + 1] = Math.sin(x * 0.08 + time) * 0.4 + Math.cos(z * 0.08 + time * 0.7) * 0.3;
+    }
+    lake.geometry.attributes.position.needsUpdate = true;
+
+    // 光柱
+    if (lightPillar) {
+        lightPillar.rotation.y = time * 0.3;
+        lightPillar.children.forEach((c, i) => {
+            if (c.material.opacity !== undefined) {
+                const baseOp = (0.06 - i * 0.01) || 0.15;
+                c.material.opacity = baseOp + Math.sin(time * 2 + i) * baseOp * 0.3;
+            }
+        });
+        if (pillarLight) {
+            pillarLight.intensity = 1.5 + Math.sin(time * 3) * 0.3;
+        }
     }
 
-    let html = '<div style="margin-bottom:15px;color:#ffd93d;font-weight:600">📊 答题结果分析</div>';
+    // 祝福文字环绕
+    if (blessingGroup) {
+        blessingGroup.children.forEach((child, i) => {
+            if (i > 1 && child.userData.angle !== undefined) {
+                child.userData.angle += child.userData.speed * 0.008;
+                child.position.x = Math.cos(child.userData.angle) * child.userData.radius;
+                child.position.z = Math.sin(child.userData.angle) * child.userData.radius;
+                child.position.y = child.userData.yBase + Math.sin(time + i) * 0.3;
+            }
+        });
+    }
 
-    // 统计各模块
-    const modStats = {A:0, B:0, C:0, D:0};
-    const modCounts = {A:0, B:0, C:0, D:0};
-    decoded.forEach((ans, idx) => {
-      modStats[questions[idx].mod] += ans;
-      modCounts[questions[idx].mod]++;
-    });
+    // 流星
+    if (Math.random() < 0.003) {
+        const meteor = new THREE.Mesh(
+            new THREE.SphereGeometry(0.08, 6, 6),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        meteor.position.set(
+            50 + Math.random() * 50,
+            40 + Math.random() * 20,
+            (Math.random() - 0.5) * 50
+        );
+        scene.add(meteor);
 
-    html += '<div style="margin-bottom:15px;">';
-    ['A','B','C','D'].forEach(m => {
-      const avg = (modStats[m] / modCounts[m]).toFixed(2);
-      html += `<div style="margin:4px 0">模块${m} 平均分: ${avg}</div>`;
-    });
-    html += '</div>';
+        const animateMeteor = () => {
+            meteor.position.x -= 1.5;
+            meteor.position.y -= 0.8;
+            meteor.position.z -= 0.3;
+            if (meteor.position.y > -20) {
+                requestAnimationFrame(animateMeteor);
+            } else {
+                scene.remove(meteor);
+            }
+        };
+        animateMeteor();
+    }
 
-    // 矛盾检测
-    html += '<div style="margin-bottom:15px;color:#ff6b6b;font-weight:600">⚠️ 矛盾检测（答案不一致标红）</div>';
-    contradictionPairs.forEach(([a, b]) => {
-      const inconsistent = decoded[a] !== decoded[b];
-      const cls = inconsistent ? 'inconsistent' : '';
-      html += `<div class="ans-row ${cls}">
-        <span>Q${a+1} vs Q${b+1}</span>
-        <span>${String.fromCharCode(65+decoded[a])} vs ${String.fromCharCode(65+decoded[b])} ${inconsistent ? '❌' : '✅'}</span>
-      </div>`;
-    });
+    // 更新烟花
+    updateRockets();
+    updateExplosions();
 
-    // 全部答案
-    html += '<div style="margin:20px 0 10px;color:#6bcb77;font-weight:600">📝 全部答案</div>';
-    decoded.forEach((ans, idx) => {
-      const isContradiction = contradictionPairs.some(p => p[0] === idx || p[1] === idx);
-      const color = isContradiction ? 'color:#ffd93d' : '';
-      html += `<div class="ans-row" style="${color}">
-        <span>Q${idx+1} [${questions[idx].mod}]</span>
-        <span>${String.fromCharCode(65+ans)} - ${questions[idx].opts[ans]}</span>
-      </div>`;
-    });
-
-    output.innerHTML = html;
-  } catch(e) {
-    output.innerHTML = '<div style="color:#ff6b6b">解密失败：无效的密钥格式</div>';
-  }
+    renderer.render(scene, camera);
 }
-</script>
 
+// 窗口调整
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 启动
+updateCamera();
+document.getElementById('loading').style.opacity = 0;
+setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+}, 1000);
+
+animate();
+</script>
 </body>
 </html>
