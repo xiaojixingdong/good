@@ -695,7 +695,7 @@ function showBlessingText() {
     blessingGroup = new THREE.Group();
 
     // 主标题
-    const mainTex = createTextTexture('旁白，生日快乐', 55, '#ffd700', true);
+    const mainTex = createTextTexture('旁白，生日快乐', 80, '#ffd700', true);
     const mainMat = new THREE.SpriteMaterial({
         map: mainTex,
         transparent: true,
@@ -708,7 +708,7 @@ function showBlessingText() {
     blessingGroup.add(mainSprite);
 
     // 副标题
-    const subTex = createTextTexture('愿你的每一天都闪闪发光', 32, '#ffaa55', false);
+    const subTex = createTextTexture('愿你的每一天都闪闪发光', 65, '#ffaa55', false);
     const subMat = new THREE.SpriteMaterial({
         map: subTex,
         transparent: true,
@@ -732,7 +732,7 @@ function showBlessingText() {
         '来日方长'
     ];
     texts.forEach((text, i) => {
-        const tex = createTextTexture(text, 26, '#ffd700', false);
+        const tex = createTextTexture(text, 55, '#ffd700', false);
         const mat = new THREE.SpriteMaterial({
             map: tex,
             transparent: true,
